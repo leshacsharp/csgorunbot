@@ -1,0 +1,9 @@
+bin/
+obj/
+packages/
+TEMP/
+*.vs
+*.suo
+*.mdf
+*.ldf
+*.log
