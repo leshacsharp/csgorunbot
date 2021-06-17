@@ -1,15 +1,7 @@
-﻿using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
+﻿using OpenQA.Selenium.Chrome;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace CSGORUNBOT
@@ -19,6 +11,8 @@ namespace CSGORUNBOT
         private const string WebsiteUrl = "https://csgorun.pro/";
         private const string BrowserApp = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
         private const int DebugPort = 9200;
+
+        private IGameManager _gameManager;
 
         public Form1()
         {
@@ -32,24 +26,39 @@ namespace CSGORUNBOT
             var driver = new ChromeDriver(options);
             driver.Navigate().GoToUrl(WebsiteUrl);
 
+            //var config = new GameConfig()
+            //{
+            //    IntervaOfGames = 1000,
+            //    BetAfterNumberOfGames = 1, //for multiply strategy
+            //    BetIfChance = 2,           //for multiply strategy
+            //    DefaultPrice = 0.30m,
+            //    DefaultPlusMinus = 0.15m,
+            //    DefaultStep = 0.01m,
+            //    BetChance = 1.2m,
+            //    MultiplyPriceIfFail = 5,
+            //    MaxProfit = 10m
+            //};
+
             var config = new GameConfig()
             {
                 IntervaOfGames = 1000,
-                BetAfterNumberOfGames = 2,
-                BetIfChance = 2,
-                DefaultPrice = 0.25m,
-                DefaultPlusMinus = 0.05m,
+                BetAfterNumberOfGames = 1, //for multiply strategy
+                BetIfChance = 2,           //for multiply strategy
+                DefaultPrice = 0.60m,
+                DefaultPlusMinus = 0.30m,
                 DefaultStep = 0.01m,
-                DefaultChance = 2
+                BetChance = 1.3m,
+                MultiplyPriceIfFail = 4,
+                MaxProfit = 20m
             };
 
             var bot = new BrowserBot(driver, config);
             var gameRepository = new LocalGameRepository();
-            var betStrategy = new BetStrategy(gameRepository, config);
-            var gameManager = new GameManager(bot, betStrategy, gameRepository, config);
+            //var betStrategy = new MultipleBetStrategy(gameRepository, config);
+            var betStrategy = new EveryBetStrategy(gameRepository, config);
 
-            var tokenSource = new CancellationTokenSource();
-            gameManager.Start(tokenSource.Token);
+            _gameManager = new GameManager(bot, betStrategy, gameRepository, config);
+            _gameManager.Start();
         }
 
         //launch browser
@@ -64,7 +73,8 @@ namespace CSGORUNBOT
         //close app
         private void button3_Click(object sender, EventArgs e)
         {
-            Environment.Exit(0);
+            _gameManager?.Stop();
+            //Environment.Exit(0);
         }
     }
 }

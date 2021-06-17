@@ -10,10 +10,11 @@ namespace CSGORUNBOT
         private readonly IBetStrategy _betStrategy;
         private readonly IGameRepository _gameRepository;
         private readonly GameConfig _config;
-        private Timer _timer;
-        private Timer _timer2;
+        private Timer _gameTimer;
+        private Timer _prepareTimer;
 
         private GameBet _currentBet;
+        private decimal _maxBalance;
 
         public GameManager(
             IBrowserBot bot,
@@ -27,25 +28,31 @@ namespace CSGORUNBOT
             _config = config;
         }
 
-        public void Start(System.Threading.CancellationToken cancellationToken)
+        public void Start()
         {
-            _timer = new Timer();
-            _timer.Interval = _config.IntervaOfGames;
-            _timer.Tag = cancellationToken;
-            _timer.Tick += Play;
-            _timer.Start();
+            _gameTimer = new Timer();
+            _gameTimer.Interval = _config.IntervaOfGames;
+            _gameTimer.Tick += Play;
+            _gameTimer.Start();
 
-            _timer2 = new Timer();
-            _timer2.Interval = 500; // todo: move to the settings
-            _timer2.Tag = cancellationToken;
-            _timer2.Tick += PrepareToGame;
-            _timer2.Start();
+            _prepareTimer = new Timer();
+            _prepareTimer.Interval = 500; // todo: move to the settings
+            _prepareTimer.Tick += PrepareToGame;
+            _prepareTimer.Start();
+
+            _maxBalance = _bot.GetBalance() + (_config.MaxProfit ?? default);
         }
 
         private void PrepareToGame(object sender, EventArgs e)
         {
-            var cancellationToken = (System.Threading.CancellationToken)_timer.Tag;
-            cancellationToken.ThrowIfCancellationRequested();
+            var currentBalance = _bot.GetBalance();
+            if (_config.MaxProfit.HasValue && currentBalance >= _maxBalance)
+            {
+                System.IO.File.AppendAllLines("D:/logs.txt", new[] { $"PrepareToGame stop bot curBalance={currentBalance}" });
+                _gameTimer?.Stop();
+                _prepareTimer?.Stop();
+                return;
+            }
 
             var possibleGameDirections = _betStrategy.GetPossibleDirections(_currentBet);
             var possibleGameDirectionsPrices = possibleGameDirections.Select(d => d.Price).ToList();
@@ -62,10 +69,7 @@ namespace CSGORUNBOT
 
         private void Play(object sender, EventArgs e)
         {
-            System.IO.File.AppendAllLines("D:/logs.txt", new[] { "-------------------------------------------------------------------" });
-
-            var cancellationToken = (System.Threading.CancellationToken)_timer.Tag;
-            cancellationToken.ThrowIfCancellationRequested();
+            System.IO.File.AppendAllLines("D:/logs.txt", new[] { $"-----------------------------------time={DateTime.Now}--------------------------------" });
  
             var previousGame = _bot.GetPreviousGame();
             var storedGame = _gameRepository.Get(previousGame.Id);
@@ -77,7 +81,6 @@ namespace CSGORUNBOT
                     _currentBet.IsSuccessed = previousGame.Chance >= _currentBet.Chance;
                     previousGame.MyBet = _currentBet;          
                     _currentBet = null;
-                    System.IO.File.AppendAllLines("D:/logs.txt", new[] { $"CurrentBet = null " });
                 }
               
                 _gameRepository.Add(previousGame);  
@@ -94,7 +97,6 @@ namespace CSGORUNBOT
                     var betResponse = _bot.Bet(needToBet.Price, needToBet.Chance);
                     if (betResponse.Successed)
                     {
-                        System.IO.File.AppendAllLines("D:/logs.txt", new[] { $"CurrentBet = new bet " });
                         _currentBet = new GameBet() { Chance = needToBet.Chance, Price = needToBet.Price };
                         _bot.ClearInventory();
                     }
@@ -108,13 +110,18 @@ namespace CSGORUNBOT
                         var betResponse = _bot.Bet(buyResponse.Price, needToBet.Chance);
                         if (betResponse.Successed)
                         {
-                            System.IO.File.AppendAllLines("D:/logs.txt", new[] { $"CurrentBet = new bet " });
                             _currentBet = new GameBet() { Chance = needToBet.Chance, Price = buyResponse.Price };
                             _bot.ClearInventory();
                         }
                     }
                 }
             }
+        }
+
+        public void Stop()
+        {
+            _gameTimer?.Stop();
+            _prepareTimer?.Stop();
         }
     }
 }

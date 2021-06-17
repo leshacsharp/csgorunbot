@@ -45,8 +45,8 @@ namespace CSGORUNBOT
             var chanceInput = _webDriver.FindElementByCssSelector("#auto-upgrade-input");
             var chanceInputValue = chanceInput.GetAttribute("value");
             chanceInput.SendKeys(string.Concat(Enumerable.Repeat(Keys.Backspace, chanceInputValue.Length)));
-            chanceInput.SendKeys(chance.ToString()); 
-
+            chanceInput.SendKeys(chance.ToString().Replace(",", "."));
+ 
             var makeBetButton = _webDriver.FindElementByCssSelector("button.make-bet");
             makeBetButton.Click();
 
@@ -143,8 +143,10 @@ namespace CSGORUNBOT
 
         public bool HasSkin(decimal price)
         {
+            var wait = new WebDriverWait(_webDriver, TimeSpan.FromMilliseconds(400)) { PollingInterval = TimeSpan.FromMilliseconds(200) };
+            var inventoryPricesElements = _webDriver.FindElementsByCssSelector(".cur-u-drops-list .drop-preview__price").ToList();
+            var inventoryPrices = inventoryPricesElements.Select(e => ParsePrice(e.Text)).ToList();
             var possibleSkinPrices = PriceRange(price, _config.DefaultPlusMinus, _config.DefaultStep);
-            var inventoryPrices = _webDriver.FindElementsByCssSelector(".cur-u-drops-list .drop-preview__price").Select(e => ParsePrice(e.Text)).ToList();
 
             System.IO.File.AppendAllLines("D:/logs.txt", new[] { $"HasSkin {string.Join(",", inventoryPrices)}"});
 
@@ -181,12 +183,7 @@ namespace CSGORUNBOT
 
             BuySkin(_config.DefaultPrice);
         }
-
-        private decimal ParsePrice(string price)
-        {
-            return decimal.Parse(price.Replace("$", string.Empty).Replace(".", ","));
-        }
-
+    
         private List<decimal> PriceRange(decimal price, decimal? plusMinus, decimal? step)
         {
             var priceRange = new List<decimal>();
@@ -230,6 +227,18 @@ namespace CSGORUNBOT
             }
 
             return inventory;
+        }
+
+        public decimal GetBalance()
+        {
+            var wait = new WebDriverWait(_webDriver, TimeSpan.FromMilliseconds(400));
+            var balanceElement = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector(".header-user__balance")));
+            return ParsePrice(balanceElement.Text);
+        }
+
+        private decimal ParsePrice(string price)
+        {
+            return decimal.Parse(price.Replace("$", string.Empty).Replace(".", ","));
         }
     }
 }

@@ -4,6 +4,7 @@ namespace CSGORUNBOT
 {
     public interface IGameManager
     {
-        void Start(CancellationToken cancellationToken);
+        void Start();
+        void Stop();
     }
 }

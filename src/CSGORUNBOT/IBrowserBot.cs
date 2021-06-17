@@ -13,5 +13,6 @@ namespace CSGORUNBOT
         Game GetPreviousGame();
         List<Skin> GetInventory();
         void ClearInventory();
+        decimal GetBalance();
     }
 }

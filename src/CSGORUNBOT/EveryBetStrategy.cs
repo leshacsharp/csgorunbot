@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CSGORUNBOT
 {
-    public class BetStrategyV2 : IBetStrategy
+    public class EveryBetStrategy : IBetStrategy
     {
         private readonly IGameRepository _gameRepository;
         private readonly GameConfig _config;
 
-        public BetStrategyV2(IGameRepository gameRepository, GameConfig config)
+        public EveryBetStrategy(IGameRepository gameRepository, GameConfig config)
         {
             _gameRepository = gameRepository;
             _config = config;
@@ -21,7 +22,7 @@ namespace CSGORUNBOT
             var defaultDirection = new NeedToBetResponse()
             {
                 Bet = true,
-                Chance = _config.DefaultChance,
+                Chance = _config.BetChance,
                 Price = _config.DefaultPrice
             };
             possibleDirestions.Add(defaultDirection);
@@ -31,8 +32,8 @@ namespace CSGORUNBOT
                 var failDirection = new NeedToBetResponse()
                 {
                     Bet = true,
-                    Chance = _config.DefaultChance,
-                    Price = currentBet.Price * _config.DefaultChance
+                    Chance = _config.BetChance,
+                    Price = Math.Round(currentBet.Price * _config.MultiplyPriceIfFail, 2, MidpointRounding.ToNegativeInfinity)
                 };
                 possibleDirestions.Add(failDirection);
             }
@@ -46,14 +47,14 @@ namespace CSGORUNBOT
             var response = new NeedToBetResponse() 
             { 
                 Bet = true,
-                Chance = _config.DefaultChance,
+                Chance = _config.BetChance,
                 Price = _config.DefaultPrice
             };
 
             var lastGameBet = lastGame.MyBet;
             if (lastGame?.MyBet?.IsSuccessed == false)
             {
-                response.Price = lastGameBet.Price * response.Chance;
+                response.Price = Math.Round(lastGameBet.Price * _config.MultiplyPriceIfFail, 2, MidpointRounding.ToNegativeInfinity);
             }
 
             return response;

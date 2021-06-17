@@ -40,13 +40,13 @@ namespace CSGORUNBOT
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(112, 34);
             this.button1.TabIndex = 0;
-            this.button1.Text = "run bot";
+            this.button1.Text = "start bot";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(211, 194);
+            this.button2.Location = new System.Drawing.Point(144, 194);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(155, 34);
             this.button2.TabIndex = 1;
@@ -56,11 +56,11 @@ namespace CSGORUNBOT
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(72, 194);
+            this.button3.Location = new System.Drawing.Point(534, 194);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(112, 34);
             this.button3.TabIndex = 2;
-            this.button3.Text = "close app";
+            this.button3.Text = "stop bot";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 

@@ -8,6 +8,8 @@
         public decimal DefaultPrice { get; set; } = 0.25m;
         public decimal? DefaultPlusMinus { get; set; }
         public decimal? DefaultStep { get; set; }
-        public decimal DefaultChance { get; set; }
+        public decimal BetChance { get; set; }
+        public decimal MultiplyPriceIfFail { get; set; }
+        public decimal? MaxProfit { get; set; }
     }
 }
