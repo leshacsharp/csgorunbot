@@ -53,10 +53,11 @@ namespace CSGORUNBOT
                 _prepareTimer?.Stop();
                 return;
             }
-
+ 
             var possibleGameDirections = _betStrategy.GetPossibleDirections(_currentBet);
             var possibleGameDirectionsPrices = possibleGameDirections.Select(d => d.Price).ToList();
             System.IO.File.AppendAllLines("D:/logs.txt", new[] { $"PrepareToGame DirectionsPrices = {string.Join(";", possibleGameDirectionsPrices)}"});
+            System.IO.File.AppendAllLines("D:/logs.txt", new[] { $"PrepareToGame curBalance={currentBalance}" });
 
             foreach (var direction in possibleGameDirections)
             {
